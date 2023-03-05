@@ -36,6 +36,7 @@ use Webman\{Route as RouteClass, Route\Route as RouteObject};
 class Route
 {
     public string $path = '';
+    public \ReflectionClass $controllerClassRef;
     protected array $config = ['path' => '', 'method' => '', 'operation' => []];
 
     /**
@@ -50,9 +51,6 @@ class Route
      * @param array $middleware <span style="color:#E97230;">路由中间件</span>
      * <a href="https://www.workerman.net/doc/webman#/middleware" style="color:#5A9BF6;">Webman 中间件介绍</a>
      * <pre style="color:#3982F7;">[ MiddleWare::class, ... ]</pre>
-     * <hr/>
-     *
-     * @param bool|null $addToOpenAPIDoc <span style="color:#E97230;">是否在 OpenAPI 文档中显示此路由方法(true|false)</span>
      * <hr/>
      *
      * @param array|parameter $cookie <span style="color:#E97230;">cookie 参数列表</span>
@@ -280,7 +278,6 @@ class Route
         protected string                       $route = '',
         protected string|array                 $methods = 'get',
         protected array                        $middleware = [],
-        protected bool                         $addToOpenAPIDoc = true,
         protected array|parameter              $cookie = [],
         protected array|parameter              $header = [],
         protected array|parameter              $get = [],
@@ -355,51 +352,23 @@ class Route
         OpenAPI::setExtend($this->Extend);
     }
 
-    /**
-     * <h2 style="color:#E97230;">注册路由</h2>
-     *
-     * @param mixed $callback <span style="color:#E97230;">路由调用方法</span>
-     */
     public function add(string $path, mixed $callback): RouteObject
     {
         $this->path = $path;
         $callback = RouteClass::convertToCallable($this->path, $callback);
-
         return RouteClass::add(
             $this->methods,
             $this->path,
             $callback
-//      function (Request $request, ...$parameters) use ($callback) {
-//        //  应注意作用域问题！
-//        $custom_validator = $this->validator;
-//        $config           = $this->config;
-//
-//        $request->route_config = $config;
-//
-//        // 用户自定义验证器
-//        if (is_callable($custom_validator)) {
-//          $verifiedData = $custom_validator($request, ...$parameters);
-//        } else {
-//          // 默认验证器
-//          $verifiedData = Validator::validate($request, ...$parameters);
-//        }
-//
-//        // 传递验证后的数据
-//        $request->verifiedData = $verifiedData;
-//
-//        $ref = new ReflectionMethod(...$callback);
-//
-//        $callback[0] = $ref->isStatic() ? $callback[0] : new $callback[0]();
-//
-//        return $callback($request, ...$parameters);
-//      }
-        )->middleware($this->middleware);
+        );
     }
 
-    /**
-     * <h2 style="color:#E97230;">注册到 OpenAPI</h2>
-     */
-    public function addToOpenAPIDoc(ReflectionMethod $endpoint_ref): void
+    public function getMiddleware($controller_middleware = []): array
+    {
+        return [...$controller_middleware, ...$this->middleware];
+    }
+
+    public function addToDoc(ReflectionMethod $endpoint_ref): void
     {
         $endpoint_source = "***Source:** [";
         $endpoint_source .= $endpoint_ref->getFileName();
@@ -417,97 +386,96 @@ class Route
         $this->description .= strlen($this->description) > 0 ? "\n\n---\n\n" : '';
         $this->description .= $endpoint_source;
 
-        if ($this->addToOpenAPIDoc) {
-
-            // 处理路由路径
-            $paths = (new Std)->parse($this->path)[0];
-            $path = '';
-            $path_params = [];
-            foreach ($paths as $folder) {
-                if (is_array($folder)) {
-                    $path_params[$folder[0]] = [$folder[1], 0];
-                    $folder = "{{$folder[0]}}";
-                }
-                $path .= "{$folder}";
+        $path = $this->path;
+//            $path = preg_replace("/{slash_suffix[^}]*}$/", '', $path);
+        // 处理路由路径
+        $paths = (new Std)->parse($path)[0];
+        $path = '';
+        $path_params = [];
+        foreach ($paths as $folder) {
+            if (is_array($folder)) {
+                $path_params[$folder[0]] = [$folder[1], 0];
+                $folder = "{{$folder[0]}}";
             }
-
-            /**
-             * @var parameter[] $parameters <span style="color:#E97230;">处理合并 parameters header cookie get</span>
-             */
-            $parameters = [];
-            $this->prepareParams($this->cookie, 'cookie', $parameters);
-            $this->prepareParams($this->header, 'header', $parameters);
-            $this->prepareParams($this->get, 'query', $parameters);
-            $this->prepareParams($this->parameters, false, $parameters);
-            // 处理路径参数
-            $path_name_list = [];
-            foreach ($path_params as $name => $conf) {
-                // 读取出路径参数正则内的注释
-                $is_matched = preg_match("/(\(\?#[^)]*([^)]*([^(]*\([^()]*\)[^)]*(?R)*)[^(]*)*[^(]*\))/", $conf[0], $matches);
-                // 生成字段描述
-                $desc = $is_matched ? preg_replace("/(^\(\?#|\)$)/", '', $matches[1]) : '路径参数';
-                $pattern = "^" . ($is_matched ? str_replace($matches[1], '', $conf[0]) : $conf[0]) . "$";
-                $path_name_list[] = [
-                    parameter::name => $name,
-                    parameter::in => 'path',
-                    parameter::required => true,
-                    parameter::description => $desc,
-                    parameter::schema => [
-                        schema::type => 'string',
-                        schema::pattern => $pattern,
-                    ],
-                ];
-
-            }
-            array_unshift($parameters, ...$path_name_list);
-
-            /** 处理 requestBody */
-            $this->prepareBody($this->post);
-            $this->prepareBody($this->json, 'json');
-            $this->prepareBody($this->xml, 'xml');
-            $this->prepareBody($this->file, 'file');
-
-
-            //读取需要添加到全局 tags 表的 tag
-            $tags = [];
-            foreach ($this->tags as $tag) {
-                if (is_array($tag)) {
-                    OpenAPI::addTag($tag);
-                    $tags[] = $tag['name'];
-                } else {
-                    $tags[] = $tag;
-                }
-            }
-
-            // 生成方法文档数组
-            $operation = [
-                'summary' => $this->summary,
-                'description' => $this->description,
-                'responses' => $this->responses,
+            $path .= "{$folder}";
+        }
+        /**
+         * @var parameter[] $parameters <span style="color:#E97230;">处理合并 parameters header cookie get</span>
+         */
+        $parameters = [];
+        $this->prepareParams($this->cookie, 'cookie', $parameters);
+        $this->prepareParams($this->header, 'header', $parameters);
+        $this->prepareParams($this->get, 'query', $parameters);
+        $this->prepareParams($this->parameters, false, $parameters);
+        // 处理路径参数
+        $path_name_list = [];
+        foreach ($path_params as $name => $conf) {
+            // 读取出路径参数正则内的注释
+            $is_matched = preg_match("/(\(\?#[^)]*([^)]*([^(]*\([^()]*\)[^)]*(?R)*)[^(]*)*[^(]*\))/", $conf[0], $matches);
+            // 生成字段描述
+            $desc = $is_matched ? preg_replace("/(^\(\?#|\)$)/", '', $matches[1]) : '路径参数';
+            $pattern = "^" . ($is_matched ? str_replace($matches[1], '', $conf[0]) : $conf[0]) . "$";
+            $path_name_list[] = [
+                parameter::name => $name,
+                parameter::in => 'path',
+                parameter::required => true,
+                parameter::description => $desc,
+                parameter::schema => [
+                    schema::type => 'string',
+                    schema::pattern => $pattern,
+                ],
             ];
-            $this->deprecated && $operation['deprecated'] = $this->deprecated;
-            count($tags) > 0 && $operation['tags'] = $tags;
-            count($parameters) > 0 && $operation['parameters'] = $parameters;
-            count($this->externalDocs) > 0 && $operation['externalDocs'] = $this->externalDocs;
-            count($this->callbacks) > 0 && $operation['callbacks'] = $this->callbacks;
-            count($this->servers) > 0 && $operation['servers'] = $this->servers;
-            count($this->security) > 0 && $operation['security'] = $this->security;
 
-                $this->operationId ?? $operation['operationId'] = $this->operationId;
+        }
+        array_unshift($parameters, ...$path_name_list);
 
-            if (count($this->requestBody) > 0) {
-                $body = $this->requestBody;
-                $this->requireBody && $body['required'] = $this->requireBody;
-                $operation['requestBody'] = $body;
-            }
-            $operation = array_replace_recursive($operation, $this->extend);
+        /** 处理 requestBody */
+        $this->prepareBody($this->post);
+        $this->prepareBody($this->json, 'json');
+        $this->prepareBody($this->xml, 'xml');
+        $this->prepareBody($this->file, 'file');
 
-            foreach ($this->methods as $method) {
-                $method = strtolower($method);
-                $this->config = ['path' => $path, 'method' => $method, 'operation' => $operation];
-                OpenAPI::addPath([$path => [$method => $operation]]);
+
+        //读取需要添加到全局 tags 表的 tag
+        $tags = [];
+        foreach ($this->tags as $tag) {
+            if (is_array($tag)) {
+                OpenAPI::addTag($tag);
+                $tags[] = $tag['name'];
+            } else {
+                $tags[] = $tag;
             }
         }
+
+        // 生成方法文档数组
+        $operation = [
+            'summary' => $this->summary,
+            'description' => $this->description,
+            'responses' => $this->responses,
+        ];
+        $this->deprecated && $operation['deprecated'] = $this->deprecated;
+        count($tags) > 0 && $operation['tags'] = $tags;
+        count($parameters) > 0 && $operation['parameters'] = $parameters;
+        count($this->externalDocs) > 0 && $operation['externalDocs'] = $this->externalDocs;
+        count($this->callbacks) > 0 && $operation['callbacks'] = $this->callbacks;
+        count($this->servers) > 0 && $operation['servers'] = $this->servers;
+        count($this->security) > 0 && $operation['security'] = $this->security;
+
+            $this->operationId ?? $operation['operationId'] = $this->operationId;
+
+        if (count($this->requestBody) > 0) {
+            $body = $this->requestBody;
+            $this->requireBody && $body['required'] = $this->requireBody;
+            $operation['requestBody'] = $body;
+        }
+        $operation = array_replace_recursive($operation, $this->extend);
+
+        foreach ($this->methods as $method) {
+            $method = strtolower($method);
+            $this->config = ['path' => $path, 'method' => $method, 'operation' => $operation];
+            OpenAPI::addPath([$path => [$method => $operation]]);
+        }
+
     }
 
     protected function prepareParams($data, $type = false, &$parameters = [],): void

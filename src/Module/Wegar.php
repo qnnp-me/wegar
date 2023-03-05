@@ -13,9 +13,14 @@
 
 namespace qnnp\wegar\Module;
 
+use plugin\admin\api\Menu;
+use qnnp\wegar\Attribute\Middleware;
+use qnnp\wegar\Attribute\RemoveFromDoc;
 use qnnp\wegar\Attribute\Route as RouteAttribute;
+use qnnp\wegar\Controller\WegarController;
 use ReflectionClass;
 use ReflectionException;
+use Workerman\Timer;
 
 
 class Wegar
@@ -23,12 +28,11 @@ class Wegar
     /**
      * @var bool $withOpenapiDoc <span style="color:#E97230;">是否生成 OpenAPI 文档</span>
      */
-    protected static bool $withOpenapiDoc = true;
     protected static bool $appLoaded = false;
     protected static bool $openapiLoaded = false;
 
     /**
-     * <h2 style="color:#E97230;">加载注解路由</h2>
+     * <h2 style="color:#E97230;">扫描注解路由</h2>
      * <span style="color:#E97230;">/app 默认自动加载</span>
      *
      * @param array $apps <span style="color:#E97230;">需要另外加载的目录</span>
@@ -38,29 +42,40 @@ class Wegar
      *
      * @throws ReflectionException
      */
-    static function load(array $apps = [], bool $with_openapi_doc = true): void
+    static function scan(array $apps = []): void
     {
-        static::$withOpenapiDoc = $with_openapi_doc;
         $controller_class_list = [];
-        // TODO 多次加载？
-        if (!self::$appLoaded) {
-            self::$appLoaded = true;
-            static::scanControllerClasses('\app', app_path(), $controller_class_list);
-        }
-        if (!self::$openapiLoaded && $with_openapi_doc) {
-            self::$openapiLoaded = true;
-            static::scanControllerClasses(
-                'qnnp\wegar\Controller',
-                dirname(__DIR__) . '/Controller',
-                $controller_class_list
-            );
-        }
+        static::scanControllerClasses('\app', app_path(), $controller_class_list);
+        static::scanControllerClasses(
+            'qnnp\wegar\Controller',
+            dirname(__DIR__) . '/Controller',
+            $controller_class_list
+        );
         foreach ($apps as $app) {
             static::scanControllerClasses($app[0], $app[1], $controller_class_list);
         }
         foreach ($controller_class_list as $class => $namespace) {
             static::scanController($class, $namespace);
         }
+
+        $lock_file = runtime_path('wegar-menu.lock');
+        if (!file_exists($lock_file)) {
+            file_put_contents($lock_file, '');
+            $dev_menu = Menu::get('dev');
+            if (!Menu::get(WegarController::class) && $dev_menu) {
+                $pid = $dev_menu['id'];
+                Menu::add([
+                    'title' => 'Wegar',
+                    'href' => '/wegar/swagger',
+                    'pid' => $pid,
+                    'key' => WegarController::class,
+                    'weight' => 0,
+                    'type' => 1,
+                ]);
+                print "创建 Wegar 管理菜单 ✓\n";
+            }
+        }
+        Timer::add(3, fn() => @unlink($lock_file), [], false);
     }
 
     protected static function scanControllerClasses(string $app_namespace, string $app_dir_path, array &$controller_class_list): void
@@ -101,6 +116,9 @@ class Wegar
     {
         /** 给定类的反射类 */
         $controller_class_ref = new ReflectionClass($controller_class);
+        /** Controller 组中间件 */
+        $controller_middleware = $controller_class_ref->getAttributes(Middleware::class);
+        $controller_middleware = count($controller_middleware) > 0 ? $controller_middleware[0]->newInstance()->middleware : [];
         /** 获取类里的所有方法 */
         $controller_endpoints = $controller_class_ref->getMethods();
         /** 遍历类方法 */
@@ -113,6 +131,7 @@ class Wegar
                  * @var RouteAttribute $endpoint_route
                  */
                 $endpoint_route = $endpoint->newInstance();
+                $endpoint_route->controllerClassRef = $controller_class_ref;
                 /** 设置的路由对象的参数列表 */
                 $arguments = $endpoint->getArguments();
                 // 处理 ./ 相对路径开头
@@ -134,9 +153,7 @@ class Wegar
                     // 去除基本命名空间开头
                     $base_path = str_replace($base_namespace, '', $base_path);
                     // 路径中移除 controller 目录
-                    $base_path = str_replace('/controller', '', $base_path);
-                    // 路径中移除 index 类名
-                    $base_path = str_replace('/index', '', $base_path);
+                    $base_path = str_replace('/controller/', '/', $base_path);
                     // 拼接实际路径
                     $path = $base_path . (empty($path) ? '' : '/' . $path);
                 }
@@ -146,9 +163,17 @@ class Wegar
                 $controller_suffix = strtolower(config('app.controller_suffix', 'controller'));
                 $path = preg_replace("/-$controller_suffix/", '', $path);
                 /** 添加路由 */
-                $endpoint_route->add($path, $endpoint_method);
-                /** 添加到 OpenAPI 文档 */
-                static::$withOpenapiDoc && $endpoint_route->addToOpenAPIDoc($controller_endpoint);
+                $endpoint_route
+                    ->add($path, $endpoint_method)
+                    ->name($controller_class_ref->getShortName())
+                    ->middleware($endpoint_route->getMiddleware($controller_middleware));
+                if (
+                    !$controller_class_ref->getAttributes(RemoveFromDoc::class)
+                    && !$controller_endpoint->getAttributes(RemoveFromDoc::class)
+                ) {
+                    /** 添加到 OpenAPI 文档 */
+                    $endpoint_route->addToDoc($controller_endpoint);
+                }
             }
         }
     }

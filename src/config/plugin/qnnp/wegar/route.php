@@ -19,11 +19,7 @@ use Webman\Route;
 /**
  * 加载注解路由
  */
-Wegar::load(
-  [],
-  true
-);
-
+Wegar::scan();
 /**
  * 因为本注解路由可通过注解加载中间件
  * 为防止注解的中间件不被加载就被请求
@@ -31,11 +27,3 @@ Wegar::load(
  */
 Route::disableDefaultRoute();
 
-/**
- *
- */
-Route::fallback(
-  function () {
-    throw new BusinessException('Resource not found', 404);
-  }
-);

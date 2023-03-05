@@ -14,18 +14,18 @@
 namespace qnnp\wegar\Controller;
 
 use plugin\admin\app\middleware\AccessControl;
+use qnnp\wegar\Attribute\Middleware;
+use qnnp\wegar\Attribute\RemoveFromDoc;
 use qnnp\wegar\Attribute\Route;
 use qnnp\wegar\Module\OpenAPI;
 use support\Request;
 use support\Response;
 
-class Wegar
+#[RemoveFromDoc]
+#[Middleware([AccessControl::class])]
+class WegarController
 {
-    #[Route(
-        '{all:(?!openapi\.json).*}',
-        middleware: [AccessControl::class],
-        addToOpenAPIDoc: false
-    )]
+    #[Route('{all:(?!openapi\.json).*}',)]
     public function swagger(
         Request $request,
         string  $path = '',
@@ -42,11 +42,7 @@ class Wegar
         return response('<h1>404</h1>')->withStatus(404);
     }
 
-    #[Route(
-        'openapi.json',
-        middleware: [AccessControl::class],
-        addToOpenAPIDoc: false
-    )]
+    #[Route('openapi.json',)]
     public function openapi(): Response
     {
         return json(OpenAPI::generate(), JSON_PRETTY_PRINT);

@@ -1,4 +1,4 @@
-window.onload = async function () {
+window.onload = function () {
   const HideCurlPlugin = (system) => {
     return {
       wrapComponents: {
@@ -7,11 +7,10 @@ window.onload = async function () {
     }
   }
 
-  const spec = await (await fetch('openapi.json')).json()
   window.ui = SwaggerUIBundle(
     {
       displayRequestDuration: 60000,
-      spec,
+      url:'openapi.json',
       dom_id: '#swagger-ui',
       docExpansion: 'none',
       filter: true,
