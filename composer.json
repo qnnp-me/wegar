@@ -1,0 +1,28 @@
+{
+  "name": "qnnp/wegar",
+  "type": "library",
+  "license": "MIT",
+  "description": "Webman plugin qnnp/wegar",
+  "authors": [
+    {
+      "name": "qnnp",
+      "email": "wjp@pfan.ltd",
+      "homepage": "https://qnnp.me/wegar",
+      "role": "Author"
+    }
+  ],
+  "support": {
+    "email": "wjp@pfan.ltd",
+    "issues": "https://qnnp.me/wegar"
+  },
+  "require": {
+    "php": ">=8.0",
+    "swagger-api/swagger-ui": ">=4.0",
+    "webman/admin": "v0.6.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "qnnp\\wegar\\": "src"
+    }
+  }
+}
