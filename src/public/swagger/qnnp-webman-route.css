@@ -1,0 +1,67 @@
+/**
+ * This file is part of webman-auto-route.
+ * Licensed under The MIT License
+ * For full copyright and license information, please see the LICENSE.txt
+ * Redistributions of files must retain the above copyright notice.
+ *
+ * @author    qnnp<qnnp@qnnp.me>
+ * @copyright qnnp<qnnp@qnnp.me>
+ * @link      https://main.qnnp.me
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
+html {
+  box-sizing: border-box;
+  overflow: -moz-scrollbars-vertical;
+  overflow-y: auto;
+}
+body {
+  margin: 0;
+  background: #fafafa;
+  padding-bottom: 30vh;
+}
+a {
+  color: #4990e2;
+  text-decoration: none;
+}
+a:visited {
+  color: #4990e2;
+}
+a:hover {
+  text-decoration: underline;
+}
+.swagger-ui .info {
+  margin: 20px 0;
+}
+.swagger-ui .wrapper {
+  max-width: unset;
+}
+.swagger-ui .scheme-container {
+  padding: 10px 0;
+  margin: 0 0 20px 0;
+}
+.swagger-ui .opblock .opblock-summary-method {
+  font-weight: 400;
+  padding: 5px 10px;
+  font-size: 12px;
+}
+.swagger-ui .opblock .opblock-summary-operation-id,
+.swagger-ui .opblock .opblock-summary-path,
+.swagger-ui .opblock .opblock-summary-path__deprecated {
+  font-size: 12px;
+}
+.swagger-ui .btn,
+.swagger-ui select {
+  font-size: 12px;
+}
+.swagger-ui .btn.authorize span {
+  padding: 4px 5px 0;
+}
+.swagger-ui .btn.authorize svg {
+  width: 15px;
+  height: 15px;
+}
+.swagger-ui .opblock-tag {
+  font-size: 18px;
+  padding: 5px;
+}
+/*# sourceMappingURL=qnnp-webman-route.css.map */
