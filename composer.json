@@ -26,6 +26,7 @@
     }
   },
   "require-dev": {
-    "phpunit/phpunit": "^9.6"
+    "phpunit/phpunit": "^9.6",
+    "phlak/semver": "^4.1"
   }
 }
