@@ -58,9 +58,8 @@ class Wegar
             static::scanController($class, $namespace);
         }
 
-        $lock_file = runtime_path('wegar-menu.lock');
-        if (!file_exists($lock_file)) {
-            file_put_contents($lock_file, '');
+        $lock_file = fopen(runtime_path('wegar-menu.lock'), 'a+');
+        if (flock($lock_file, LOCK_EX)) {
             $dev_menu = Menu::get('dev');
             if (!Menu::get(WegarController::class) && $dev_menu) {
                 $pid = $dev_menu['id'];
@@ -72,10 +71,9 @@ class Wegar
                     'weight' => 0,
                     'type' => 1,
                 ]);
-                print "创建 Wegar 管理菜单 ✓\n";
+                print "✅ 创建 Wegar 管理菜单\n";
             }
         }
-        Timer::add(3, fn() => @unlink($lock_file), [], false);
     }
 
     protected static function scanControllerClasses(string $app_namespace, string $app_dir_path, array &$controller_class_list): void
