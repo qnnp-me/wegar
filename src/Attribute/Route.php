@@ -365,7 +365,7 @@ class Route
 
     public function getMiddleware($controller_middleware = []): array
     {
-        return [...$controller_middleware, ...$this->middleware];
+        return array_unique([...$controller_middleware, ...$this->middleware]);
     }
 
     public function addToDoc(ReflectionMethod $endpoint_ref): void
