@@ -20,7 +20,6 @@ use qnnp\wegar\Attribute\Route as RouteAttribute;
 use qnnp\wegar\Controller\WegarController;
 use ReflectionClass;
 use ReflectionException;
-use Workerman\Timer;
 
 
 class Wegar
@@ -42,15 +41,17 @@ class Wegar
      *
      * @throws ReflectionException
      */
-    static function scan(array $apps = []): void
+    static function scan(array $apps = [], $main = false): void
     {
         $controller_class_list = [];
-        static::scanControllerClasses('\app', app_path(), $controller_class_list);
-        static::scanControllerClasses(
-            'qnnp\wegar\Controller',
-            dirname(__DIR__) . '/Controller',
-            $controller_class_list
-        );
+        if ($main) {
+            static::scanControllerClasses('\app', app_path(), $controller_class_list);
+            static::scanControllerClasses(
+                'qnnp\wegar\Controller',
+                dirname(__DIR__) . '/Controller',
+                $controller_class_list
+            );
+        }
         foreach ($apps as $app) {
             static::scanControllerClasses($app[0], $app[1], $controller_class_list);
         }
@@ -64,12 +65,12 @@ class Wegar
             if (!Menu::get(WegarController::class) && $dev_menu) {
                 $pid = $dev_menu['id'];
                 Menu::add([
-                    'title' => 'Wegar',
-                    'href' => '/wegar/swagger',
-                    'pid' => $pid,
-                    'key' => WegarController::class,
+                    'title'  => 'Wegar',
+                    'href'   => '/wegar/swagger',
+                    'pid'    => $pid,
+                    'key'    => WegarController::class,
                     'weight' => 0,
-                    'type' => 1,
+                    'type'   => 1,
                 ]);
                 print "✅ 创建 Wegar 管理菜单\n";
             }

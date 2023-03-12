@@ -20,7 +20,8 @@ use qnnp\wegar\Attribute\Helper\OpenAPI\openapi as root;
 
 class OpenAPI
 {
-    protected static string $openapi = '3.0.3';
+
+    const OPENAPI_VERSION = '3.0.3';
     protected static array $info = [];
     protected static array $paths = [];
     protected static array $tags = [];
@@ -44,43 +45,48 @@ class OpenAPI
     {
         $info = array_replace_recursive(
             [
-                info::title => config('wegar.title', 'Wegar'),
-                info::description => config('wegar.description', ''),
-                info::version => config('wegar.version', '0.0.1-dev'),
-                info::termsOfService => config('wegar.termsOfService', ''),
-                info::contact => [
-                    contact::name => config('wegar.contact.name', ''),
-                    contact::url => config('wegar.contact.url', ''),
-                    contact::email => config('wegar.contact.email', '')
+                info::title          => self::config('info.title', 'Wegar'),
+                info::description    => self::config('info.description', ''),
+                info::version        => self::config('info.version', '0.0.0'),
+                info::termsOfService => self::config('info.termsOfService', ''),
+                info::contact        => [
+                    contact::name  => self::config('info.contact.name', ''),
+                    contact::url   => self::config('info.contact.url', ''),
+                    contact::email => self::config('info.contact.email', '')
                 ],
-                info::license => [
-                    license::name => config('wegar.license.name', ''),
-                    license::url => config('wegar.license.url', '')
+                info::license        => [
+                    license::name => self::config('info.license.name', ''),
+                    license::url  => self::config('info.license.url', '')
                 ],
             ],
             static::$info
         );
         $doc = [
-            root::openapi => static::$openapi,
-            root::info => $info,
+            root::openapi => self::OPENAPI_VERSION,
+            root::info    => $info,
         ];
-        static::$tags && $doc['tags'] = static::$tags;
-        static::$servers && $doc['servers'] = static::$servers;
-        static::$security && $doc['security'] = static::$security;
-        static::$components && $doc['components'] = static::$components;
-        static::$externalDocs && $doc['externalDocs'] = static::$externalDocs;
+        $doc['tags'] = static::$tags;
+        $doc['servers'] = static::$servers;
+        $doc['security'] = static::$security;
+        $doc['components'] = static::$components;
+        $doc['externalDocs'] = static::$externalDocs;
         $doc = array_replace_recursive($doc, static::$extend);
         $doc['paths'] = static::$paths;
 
         return $doc;
     }
 
+    private static function config($key, $default)
+    {
+        return config("plugin.qnnp.wegar.wegar.$key", $default);
+    }
+
     static function addPath(array $paths): void
     {
         foreach ($paths as $path => $method_config) {
             !isset(static::$paths[$path]) && static::$paths[$path] = [];
-            foreach ($method_config as $method => $_values) {
-                static::$paths[$path][$method] = $_values;
+            foreach ($method_config as $method => $values) {
+                static::$paths[$path][$method] = $values;
             }
         }
     }
@@ -91,11 +97,6 @@ class OpenAPI
             if ($tag['name'] == $tags['name']) return null;
         }
         static::$tags[] = $tags;
-    }
-
-    static function setOpenAPIVersion(?string $version): void
-    {
-            $version ?? static::$openapi = $version;
     }
 
     static function setInfo(array $info): void
