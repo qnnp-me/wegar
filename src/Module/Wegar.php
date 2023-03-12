@@ -24,74 +24,50 @@ use ReflectionException;
 
 class Wegar
 {
-    /**
-     * @var bool $withOpenapiDoc <span style="color:#E97230;">是否生成 OpenAPI 文档</span>
-     */
-    protected static bool $appLoaded = false;
-    protected static bool $openapiLoaded = false;
 
     /**
      * <h2 style="color:#E97230;">扫描注解路由</h2>
      * <span style="color:#E97230;">/app 默认自动加载</span>
      *
-     * @param array $apps <span style="color:#E97230;">需要另外加载的目录</span>
-     *                    <pre style="color:#E97230;">[ [命名空间根(/app), 目录绝对路径(app_path())], ...]</pre>
+     * @param array $apps <span style="color:#E97230;">需要另外加载的 app , 此处 App::class 为 app Controller 目录的一个类</span>
+     *                    <pre style="color:#E97230;">[ App::class, ...]</pre>
      *
-     * @param bool $with_openapi_doc <span style="color:#E97230;">OpenAPI 文档开关（默认：true）</span>
-     *
-     * @throws ReflectionException
+     * @param bool $init <span style="color:#E97230;">加载默认路由</span>
      */
-    static function scan(array $apps = [], $main = false): void
+    static function scan(array $apps = [], bool $init = false): void
+    {
+        if ($init) {
+            $controller_class_list = static::scanControllerClasses('\app', app_path());
+            foreach ($controller_class_list as $controller_class => $app_base_namespace) {
+                static::scanController($controller_class, $app_base_namespace);
+            }
+            static::scanAppController(WegarController::class);
+            self::checkMenu();
+        }
+
+        foreach ($apps as $app) {
+            if (class_exists($app))
+                static::scanAppController($app);
+        }
+    }
+
+    private static function scanControllerClasses(string $app_base_namespace, string $app_base_path): array
     {
         $controller_class_list = [];
-        if ($main) {
-            static::scanControllerClasses('\app', app_path(), $controller_class_list);
-            static::scanControllerClasses(
-                'qnnp\wegar\Controller',
-                dirname(__DIR__) . '/Controller',
-                $controller_class_list
-            );
-        }
-        foreach ($apps as $app) {
-            static::scanControllerClasses($app[0], $app[1], $controller_class_list);
-        }
-        foreach ($controller_class_list as $class => $namespace) {
-            static::scanController($class, $namespace);
-        }
-
-        $lock_file = fopen(runtime_path('wegar-menu.lock'), 'a+');
-        if (flock($lock_file, LOCK_EX)) {
-            $dev_menu = Menu::get('dev');
-            if (!Menu::get(WegarController::class) && $dev_menu) {
-                $pid = $dev_menu['id'];
-                Menu::add([
-                    'title'  => 'Wegar',
-                    'href'   => '/wegar/swagger',
-                    'pid'    => $pid,
-                    'key'    => WegarController::class,
-                    'weight' => 0,
-                    'type'   => 1,
-                ]);
-                print "✅ 创建 Wegar 管理菜单\n";
-            }
-        }
-    }
-
-    protected static function scanControllerClasses(string $app_namespace, string $app_dir_path, array &$controller_class_list): void
-    {
-        $app_dir_path = realpath($app_dir_path);
-        $controller_files = static::scanControllerFiles($app_dir_path);
+        $app_base_path = realpath($app_base_path);
+        $controller_files = static::scanControllerFiles($app_base_path);
         foreach ($controller_files as $controller_file) {
             $controller_class = preg_replace("/\.php$/i", '', $controller_file);
-            $controller_class = str_replace($app_dir_path, $app_namespace, $controller_class);
+            $controller_class = str_replace($app_base_path, $app_base_namespace, $controller_class);
             $controller_class = str_replace("/", '\\', $controller_class);
             if (class_exists($controller_class)) {
-                $controller_class_list[$controller_class] = $app_namespace;
+                $controller_class_list[$controller_class] = $app_base_namespace;
             }
         }
+        return $controller_class_list;
     }
 
-    protected static function scanControllerFiles(string $controller_dir_path): array
+    private static function scanControllerFiles(string $controller_dir_path): array
     {
         $controller_files = [];
         if (is_dir($controller_dir_path)) {
@@ -111,7 +87,7 @@ class Wegar
     /**
      * @throws ReflectionException
      */
-    protected static function scanController(string $controller_class, string $namespace): void
+    private static function scanController(string $controller_class, string $app_base_namespace): void
     {
         /** 给定类的反射类 */
         $controller_class_ref = new ReflectionClass($controller_class);
@@ -144,7 +120,7 @@ class Wegar
                 if (!preg_match("/^[\/\\\]/", $path)) {
                     // 驼峰转换
                     $base_path = strtolower(preg_replace("/([a-z0-9])([A-Z])/", "$1-$2", $controller_class_ref->name));
-                    $base_namespace = strtolower(preg_replace("/([a-z0-9])([A-Z])/", "$1-$2", $namespace));
+                    $base_namespace = strtolower(preg_replace("/([a-z0-9])([A-Z])/", "$1-$2", $app_base_namespace));
                     // 反斜杠处理
                     $base_path = str_replace('\\', '/', $base_path);
                     $base_namespace = str_replace('\\', '/', $base_namespace);
@@ -163,7 +139,7 @@ class Wegar
                 $path = preg_replace("/-$controller_suffix/", '', $path);
                 /** 添加路由 */
                 $endpoint_route
-                    ->add($path, $endpoint_method)
+                    ->addToRoute($path, $endpoint_method)
                     ->name($controller_class_ref->getShortName())
                     ->middleware($endpoint_route->getMiddleware($controller_middleware));
                 if (
@@ -173,6 +149,43 @@ class Wegar
                     /** 添加到 OpenAPI 文档 */
                     $endpoint_route->addToDoc($controller_endpoint);
                 }
+            }
+        }
+    }
+
+    /**
+     * @throws ReflectionException
+     */
+    private static function scanAppController($class_in_root): void
+    {
+        $class_ref = new ReflectionClass($class_in_root);
+
+        $app_base_namespace = $class_ref->getNamespaceName();
+        $app_base_path = dirname($class_ref->getFileName());
+
+        $controller_class_list = self::scanControllerClasses($app_base_namespace, $app_base_path);
+
+        foreach ($controller_class_list as $controller_class => $app_base_namespace) {
+            static::scanController($controller_class, $app_base_namespace);
+        }
+    }
+
+    private static function checkMenu(): void
+    {
+        $lock_file = fopen(runtime_path('wegar-menu.lock'), 'a+');
+        if (flock($lock_file, LOCK_EX)) {
+            $dev_menu = Menu::get('dev');
+            if (!Menu::get(WegarController::class) && $dev_menu) {
+                $pid = $dev_menu['id'];
+                Menu::add([
+                    'title'  => 'Wegar',
+                    'href'   => '/wegar/swagger',
+                    'pid'    => $pid,
+                    'key'    => WegarController::class,
+                    'weight' => 0,
+                    'type'   => 1,
+                ]);
+                print "✅ 创建 Wegar 管理菜单\n";
             }
         }
     }

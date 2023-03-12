@@ -16,19 +16,17 @@ namespace qnnp\wegar\Attribute;
 use Attribute;
 use FastRoute\RouteParser\Std;
 use qnnp\wegar\Attribute\Helper\OpenAPI\{operation};
-use qnnp\wegar\Attribute\Helper\OpenAPI\components;
 use qnnp\wegar\Attribute\Helper\OpenAPI\externalDoc;
-use qnnp\wegar\Attribute\Helper\OpenAPI\info;
 use qnnp\wegar\Attribute\Helper\OpenAPI\media;
 use qnnp\wegar\Attribute\Helper\OpenAPI\parameter;
 use qnnp\wegar\Attribute\Helper\OpenAPI\post;
 use qnnp\wegar\Attribute\Helper\OpenAPI\requestBody;
 use qnnp\wegar\Attribute\Helper\OpenAPI\response;
 use qnnp\wegar\Attribute\Helper\OpenAPI\schema;
-use qnnp\wegar\Attribute\Helper\OpenAPI\securityScheme;
 use qnnp\wegar\Attribute\Helper\OpenAPI\server;
 use qnnp\wegar\Attribute\Helper\OpenAPI\tag;
 use qnnp\wegar\Module\OpenAPI;
+use ReflectionClass;
 use ReflectionMethod;
 use Webman\{Route as RouteClass, Route\Route as RouteObject};
 
@@ -36,8 +34,7 @@ use Webman\{Route as RouteClass, Route\Route as RouteObject};
 class Route
 {
     public string $path = '';
-    public \ReflectionClass $controllerClassRef;
-    protected array $config = ['path' => '', 'method' => '', 'operation' => []];
+    public ReflectionClass $controllerClassRef;
 
     /**
      * <h2 style="color:#E97230;">注解路由</h2>
@@ -195,121 +192,33 @@ class Route
      * <a href="https://swagger.io/specification/#operation-object" style="color:#5A9BF6;">规范文档</a>
      * <div style="color:#E97230;">用于扩展方法的选项、也可以用于强制替换方法选项</div>
      *
-     * @param string|null $Openapi <span style="color:#E97230;">[OpenAPI] OpenAPI 规范版本  (此行以下参数全局声明一次即可)</span>
-     *
-     * @param array|info $Info <span style="color:#E97230;">[OpenAPI] 文档信息</span>
-     * <pre style="color:#3982F7;">[
-     *    'title'          => '项目名称',
-     *    'description'    => '项目描述',
-     *    'version'        => '0.0.0',
-     *    'termsOfService' => 'http://localhost/service.html',
-     *    'contact'        => [
-     *        'name'  => '联系人',
-     *        'url'   => 'http://localhost/contact.html',
-     *        'email' => 'example@example.com'
-     *    ],
-     *    'license'        => [
-     *        'name' => 'API许可',
-     *        'url'  => 'http://localhost/license.html'
-     *    ]
-     *]</pre>
-     *
-     * @param array|server $Servers <span style="color:#E97230;">[OpenAPI] 接口服务器列表</span>
-     * <pre style="color:#3982F7;">[
-     *    [
-     *        'url'         => 'https://development.gigantic-server.com/v1',
-     *        'description' => 'Development server'
-     *    ],
-     *    [
-     *        'url'         => 'https://{username}.gigantic-server.com:{port}/{basePath}',
-     *        'description' => 'The production API server',
-     *        'variables'   => [
-     *            'username' => [
-     *                'default'     => 'demo',
-     *                'description' => 'description'
-     *            ],
-     *            'port'     => [
-     *                'default'     => 'demo',
-     *                'enum'        => [
-     *                    '8443',
-     *                    '443',
-     *                ]
-     *            ],
-     *            'basePath' => [
-     *                'default'     => 'v2',
-     *            ],
-     *        ]
-     *    ],
-     *    ...
-     *]</pre>
-     *
-     * @param array|components $Components <span style="color:#E97230;">[OpenAPI] 公共组件</span>
-     * <a href="https://swagger.io/specification/#components-object" style="color:#5A9BF6;">规范文档</a>
-     *
-     * @param array|securityScheme $SecuritySchemes <span style="color:#E97230;">[OpenAPI] 认证方式声明</span>
-     * <a href="https://swagger.io/specification/#security-scheme-object" style="color:#5A9BF6;">规范文档</a>
-     *
-     * @param array $Security <span style="color:#E97230;">[OpenAPI] 全局可选认证方式</span>
-     * <a href="https://swagger.io/specification/#security-requirement-object" style="color:#5A9BF6;">规范文档</a>
-     *
-     * @param array|tag $Tags <span style="color:#E97230;">[OpenAPI] Tag 描述列表</span>
-     * <pre style="color:#3982F7;">[
-     *    'name'         => '标签名称',
-     *    'description'  => '标签描述',
-     *    'externalDocs'    => [
-     *        'description' => '外部文档描述',
-     *        'url'         => '外部文档链接',
-     *    ]
-     *]</pre>
-     *
-     * @param array|externalDoc $ExternalDocs <span style="color:#E97230;">[OpenAPI] 服务器列表</span>
-     * <a href="https://swagger.io/specification/#server-object" style="color:#5A9BF6;">规范文档</a>
-     *
-     * @param \qnnp\wegar\Attribute\Helper\OpenAPI\openapi|array $Extend <span style="color:#E97230;">[OpenAPI] 全局扩展选项</span>
-     * <a href="https://swagger.io/specification/#openapi-object" style="color:#5A9BF6;">规范文档</a>
-     * <div style="color:#E97230;">用于扩展根对象下的选项、也可以用于强制替换全局设置</div>
-     *
-     * @param null $validator <span style="color:#E97230;">自定义方法参数验证器，设置后默认验证器将失效</span>
-     *
      * @link https://swagger.io/specification/#operation-object Operation 规范
      * @link https://swagger.io/specification/ OpenAPI 标准
      */
     public function __construct(
-        protected string                       $route = '',
-        protected string|array                 $methods = 'get',
-        protected array                        $middleware = [],
-        protected array|parameter              $cookie = [],
-        protected array|parameter              $header = [],
-        protected array|parameter              $get = [],
-        protected post|array                   $post = [],
-        protected post|array                   $file = [],
-        protected array                        $json = [],
-        protected array                        $xml = [],
-        protected bool                         $requireBody = false,
-        protected array|tag                    $tags = [],
-        protected string                       $summary = '',
-        protected string                       $description = '',
-        protected externalDoc|array            $externalDocs = [],
-        protected string                       $operationId = '',
-        protected array|parameter              $parameters = [],
-        protected requestBody|array            $requestBody = [],
-        protected response|array               $responses = [],
-        protected array                        $callbacks = [],
-        protected bool                         $deprecated = false,
-        protected array                        $security = [],
-        protected server|array                 $servers = [],
-        protected operation|array              $extend = [],
-        protected string                       $Openapi = '',
-        protected array|info                   $Info = [],
-        protected server|array                 $Servers = [],
-        protected array|components             $Components = [],
-        protected securityScheme|array         $SecuritySchemes = [],
-        protected array                        $Security = [],
-        protected array|tag                    $Tags = [],
-        protected externalDoc|array            $ExternalDocs = [],
-        protected array|Helper\OpenAPI\openapi $Extend = [],
-
-        protected                              $validator = null
+        private string            $route = '',
+        private string|array      $methods = 'get',
+        private array             $middleware = [],
+        private array|parameter   $cookie = [],
+        private array|parameter   $header = [],
+        private array|parameter   $get = [],
+        private post|array        $post = [],
+        private post|array        $file = [],
+        private array             $json = [],
+        private array             $xml = [],
+        private bool              $requireBody = false,
+        private array|tag         $tags = [],
+        private string            $summary = '',
+        private string            $description = '',
+        private externalDoc|array $externalDocs = [],
+        private array|parameter   $parameters = [],
+        private requestBody|array $requestBody = [],
+        private response|array    $responses = [],
+        private array             $callbacks = [],
+        private bool              $deprecated = false,
+        private array             $security = [],
+        private server|array      $servers = [],
+        private operation|array   $extend = [],
     )
     {
 
@@ -339,20 +248,9 @@ class Route
             ],
             $this->responses
         );
-
-        /** 全局设置 */
-        OpenAPI::setOpenAPIVersion($this->Openapi);
-        OpenAPI::setInfo($this->Info);
-        OpenAPI::setServers($this->Servers);
-        OpenAPI::setComponents($this->Components);
-        OpenAPI::setSecuritySchemes($this->SecuritySchemes);
-        OpenAPI::setSecurity($this->Security);
-        OpenAPI::setTags($this->Tags);
-        OpenAPI::setExternalDocs($this->ExternalDocs);
-        OpenAPI::setExtend($this->Extend);
     }
 
-    public function add(string $path, mixed $callback): RouteObject
+    public function addToRoute(string $path, mixed $callback): RouteObject
     {
         $this->path = $path;
         $callback = RouteClass::convertToCallable($this->path, $callback);
@@ -368,7 +266,7 @@ class Route
         return array_unique([...$controller_middleware, ...$this->middleware]);
     }
 
-    public function addToDoc(ReflectionMethod $endpoint_ref): void
+    public function addToDoc(ReflectionMethod $endpoint_ref, $prefix = ''): void
     {
         $endpoint_source = "***Source:** [";
         $endpoint_source .= $endpoint_ref->getFileName();
@@ -387,7 +285,6 @@ class Route
         $this->description .= $endpoint_source;
 
         $path = $this->path;
-//            $path = preg_replace("/{slash_suffix[^}]*}$/", '', $path);
         // 处理路由路径
         $paths = (new Std)->parse($path)[0];
         $path = '';
@@ -406,7 +303,7 @@ class Route
         $this->prepareParams($this->cookie, 'cookie', $parameters);
         $this->prepareParams($this->header, 'header', $parameters);
         $this->prepareParams($this->get, 'query', $parameters);
-        $this->prepareParams($this->parameters, false, $parameters);
+        $this->prepareParams($this->parameters, parameters: $parameters);
         // 处理路径参数
         $path_name_list = [];
         foreach ($path_params as $name => $conf) {
@@ -416,12 +313,12 @@ class Route
             $desc = $is_matched ? preg_replace("/(^\(\?#|\)$)/", '', $matches[1]) : '路径参数';
             $pattern = "^" . ($is_matched ? str_replace($matches[1], '', $conf[0]) : $conf[0]) . "$";
             $path_name_list[] = [
-                parameter::name => $name,
-                parameter::in => 'path',
-                parameter::required => true,
+                parameter::name        => $name,
+                parameter::in          => 'path',
+                parameter::required    => true,
                 parameter::description => $desc,
-                parameter::schema => [
-                    schema::type => 'string',
+                parameter::schema      => [
+                    schema::type    => 'string',
                     schema::pattern => $pattern,
                 ],
             ];
@@ -449,9 +346,9 @@ class Route
 
         // 生成方法文档数组
         $operation = [
-            'summary' => $this->summary,
+            'summary'     => $this->summary,
             'description' => $this->description,
-            'responses' => $this->responses,
+            'responses'   => $this->responses,
         ];
         $this->deprecated && $operation['deprecated'] = $this->deprecated;
         count($tags) > 0 && $operation['tags'] = $tags;
@@ -461,8 +358,6 @@ class Route
         count($this->servers) > 0 && $operation['servers'] = $this->servers;
         count($this->security) > 0 && $operation['security'] = $this->security;
 
-            $this->operationId ?? $operation['operationId'] = $this->operationId;
-
         if (count($this->requestBody) > 0) {
             $body = $this->requestBody;
             $this->requireBody && $body['required'] = $this->requireBody;
@@ -470,6 +365,7 @@ class Route
         }
         $operation = array_replace_recursive($operation, $this->extend);
 
+        $path = $prefix . $path;
         foreach ($this->methods as $method) {
             $method = strtolower($method);
             $this->config = ['path' => $path, 'method' => $method, 'operation' => $operation];
@@ -478,7 +374,7 @@ class Route
 
     }
 
-    protected function prepareParams($data, $type = false, &$parameters = [],): void
+    private function prepareParams($data, $type = false, &$parameters = [],): void
     {
         foreach ($data as $key => $item) {
             if (is_array($item)) {
@@ -496,7 +392,7 @@ class Route
         }
     }
 
-    protected function prepareBody($fields, $type = 'post',)
+    private function prepareBody($fields, $type = 'post',)
     {
         if (count($fields) == 0) return null;
         //
@@ -552,7 +448,7 @@ class Route
                 $request_type => [
                     media::schema => [
                         schema::properties => $properties,
-                        schema::type => 'object'
+                        schema::type       => 'object'
                     ]
                 ]
             ]
