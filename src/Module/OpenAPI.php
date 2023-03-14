@@ -45,18 +45,18 @@ class OpenAPI
     {
         $info = array_replace_recursive(
             [
-                info::title          => self::config('info.title', 'Wegar'),
-                info::description    => self::config('info.description', ''),
-                info::version        => self::config('info.version', '0.0.0'),
-                info::termsOfService => self::config('info.termsOfService', ''),
+                info::title          => Wegar::config('info.title', 'Wegar'),
+                info::description    => Wegar::config('info.description', ''),
+                info::version        => Wegar::config('info.version', '0.0.0'),
+                info::termsOfService => Wegar::config('info.termsOfService', ''),
                 info::contact        => [
-                    contact::name  => self::config('info.contact.name', ''),
-                    contact::url   => self::config('info.contact.url', ''),
-                    contact::email => self::config('info.contact.email', '')
+                    contact::name  => Wegar::config('info.contact.name', ''),
+                    contact::url   => Wegar::config('info.contact.url', ''),
+                    contact::email => Wegar::config('info.contact.email', '')
                 ],
                 info::license        => [
-                    license::name => self::config('info.license.name', ''),
-                    license::url  => self::config('info.license.url', '')
+                    license::name => Wegar::config('info.license.name', ''),
+                    license::url  => Wegar::config('info.license.url', '')
                 ],
             ],
             static::$info
@@ -74,11 +74,6 @@ class OpenAPI
         $doc['paths'] = static::$paths;
 
         return $doc;
-    }
-
-    private static function config($key, $default)
-    {
-        return config("plugin.qnnp.wegar.wegar.$key", $default);
     }
 
     static function addPath(array $paths): void

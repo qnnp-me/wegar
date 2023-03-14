@@ -266,7 +266,7 @@ class Route
         return array_unique([...$controller_middleware, ...$this->middleware]);
     }
 
-    public function addToDoc(ReflectionMethod $endpoint_ref, $prefix = ''): void
+    public function addToDoc(ReflectionMethod $endpoint_ref): void
     {
         $endpoint_source = "***Source:** [";
         $endpoint_source .= $endpoint_ref->getFileName();
@@ -365,7 +365,6 @@ class Route
         }
         $operation = array_replace_recursive($operation, $this->extend);
 
-        $path = $prefix . $path;
         foreach ($this->methods as $method) {
             $method = strtolower($method);
             $this->config = ['path' => $path, 'method' => $method, 'operation' => $operation];

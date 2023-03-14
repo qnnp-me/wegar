@@ -14,6 +14,7 @@
 namespace qnnp\wegar\Module;
 
 use plugin\admin\api\Menu;
+use qnnp\wegar\Attribute\BasePath;
 use qnnp\wegar\Attribute\Middleware;
 use qnnp\wegar\Attribute\RemoveFromDoc;
 use qnnp\wegar\Attribute\Route as RouteAttribute;
@@ -49,6 +50,10 @@ class Wegar
             if (class_exists($app))
                 static::scanAppController($app);
         }
+    }
+    public static function config($key, $default=null)
+    {
+        return config("plugin.qnnp.wegar.wegar.$key", $default);
     }
 
     private static function scanControllerClasses(string $app_base_namespace, string $app_base_path): array
@@ -89,8 +94,12 @@ class Wegar
      */
     private static function scanController(string $controller_class, string $app_base_namespace): void
     {
+        $prefix = '';
         /** 给定类的反射类 */
         $controller_class_ref = new ReflectionClass($controller_class);
+        if (!!($base_path = $controller_class_ref->getAttributes(BasePath::class))) {
+            $prefix = $base_path[0]->newInstance()->path;
+        }
         /** Controller 组中间件 */
         $controller_middleware = $controller_class_ref->getAttributes(Middleware::class);
         $controller_middleware = count($controller_middleware) > 0 ? $controller_middleware[0]->newInstance()->middleware : [];
@@ -139,7 +148,7 @@ class Wegar
                 $path = preg_replace("/-$controller_suffix/", '', $path);
                 /** 添加路由 */
                 $endpoint_route
-                    ->addToRoute($path, $endpoint_method)
+                    ->addToRoute($prefix . $path, $endpoint_method)
                     ->name($controller_class_ref->getShortName())
                     ->middleware($endpoint_route->getMiddleware($controller_middleware));
                 if (
@@ -178,7 +187,7 @@ class Wegar
             if (!Menu::get(WegarController::class) && $dev_menu) {
                 $pid = $dev_menu['id'];
                 Menu::add([
-                    'title'  => 'Wegar',
+                    'title'  => 'Wegar Doc',
                     'href'   => '/wegar/swagger',
                     'pid'    => $pid,
                     'key'    => WegarController::class,
