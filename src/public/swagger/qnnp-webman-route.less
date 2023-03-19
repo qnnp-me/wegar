@@ -71,6 +71,38 @@ a {
     .opblock-summary-path__deprecated {
       font-size: 12px;
     }
+
+    .parameters {
+      .parameters-col_description {
+        > div {
+          display: flex;
+          align-content: center;
+          flex-wrap: wrap;
+
+          > input {
+            margin-right: 20px;
+          }
+
+          > div {
+            display: flex;
+            align-content: center;
+            flex-wrap: nowrap;
+
+            > .parameter__empty_value_toggle {
+              display: flex;
+              align-content: center;
+              flex-wrap: wrap;
+              padding: 0;
+              margin: 0;
+
+              input {
+                width: max-content;
+              }
+            }
+          }
+        }
+      }
+    }
   }
 
   .btn,
