@@ -1,5 +1,6 @@
-![logo](https://wegar.qnnp.me/_media/images/logo.256.png ':size=300')
-
+<div style="text-align:center;padding: 20px;">
+    <img src="https://wegar.qnnp.me/_media/images/logo.512.png" width="256">
+</div>
 > 不一样的注解路由 | 更方便的文档生成
 
 * 实时生成标准 OpenAPI 规范接口文档
