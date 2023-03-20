@@ -1,4 +1,4 @@
-![logo](https://wegar.qnnp.me/_media/images/logo.512.png ':size=300')
+![logo](https://wegar.qnnp.me/_media/images/logo.256.png ':size=300')
 
 > 不一样的注解路由 | 更方便的文档生成
 
