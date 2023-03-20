@@ -7,7 +7,7 @@ mkdir -p /root/.cache/github-code
 OLD_VERSION="$(git for-each-ref --sort=creatordate --format '%(tag)' refs/tags | tail -2 | head -1)"
 NEW_VERSION="$(git for-each-ref --sort=creatordate --format '%(tag)' refs/tags | tail -1)"
 # 读取上一版本至今的提交信息
-printf "%s\n" "$NEW_VERSION" > /root/.cache/commit.log
+#printf "%s\n" "$NEW_VERSION" > /root/.cache/commit.log
 #git log --pretty=format:\"%s\" HEAD...$OLD_VERSION >> /root/.cache/commit.log
 printf "%s\n" "$(git tag -l --format='%(contents)' "$NEW_VERSION")" >> /root/.cache/commit.log
 # 删除白名单以外的文件

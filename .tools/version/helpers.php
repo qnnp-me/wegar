@@ -85,7 +85,7 @@ function set_new_version(
         return $change_log;
     }, $change_logs);
     array_pop($change_logs);
-    $change_logs = "\n----------\nChange Log  :\n" . implode("\n", array_unique($change_logs));
+    $change_logs = "$version\n----------\nChange Log  :\n" . implode("\n", array_unique($change_logs));
     echo "Version change: v$current_version -> $version\n";
     echo "{$change_logs}\n\n";
 
