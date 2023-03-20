@@ -1,4 +1,4 @@
-<div style="text-align:center;padding: 20px;">
+<div align="center">
     <img src="https://wegar.qnnp.me/_media/images/logo.512.png" width="256">
 </div>
 
