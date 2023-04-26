@@ -15,16 +15,10 @@ namespace qnnp\wegar\Attribute;
 
 use Attribute;
 use FastRoute\RouteParser\Std;
-use qnnp\wegar\Attribute\Helper\OpenAPI\{operation};
-use qnnp\wegar\Attribute\Helper\OpenAPI\externalDoc;
 use qnnp\wegar\Attribute\Helper\OpenAPI\media;
 use qnnp\wegar\Attribute\Helper\OpenAPI\parameter;
-use qnnp\wegar\Attribute\Helper\OpenAPI\post;
 use qnnp\wegar\Attribute\Helper\OpenAPI\requestBody;
-use qnnp\wegar\Attribute\Helper\OpenAPI\response;
 use qnnp\wegar\Attribute\Helper\OpenAPI\schema;
-use qnnp\wegar\Attribute\Helper\OpenAPI\server;
-use qnnp\wegar\Attribute\Helper\OpenAPI\tag;
 use qnnp\wegar\Module\OpenAPI;
 use ReflectionClass;
 use ReflectionMethod;
@@ -50,15 +44,7 @@ class Route
      * <pre style="color:#3982F7;">[ MiddleWare::class, ... ]</pre>
      * <hr/>
      *
-     * @param array|parameter $cookie <span style="color:#E97230;">cookie 参数列表</span>
-     * <a href="https://swagger.io/specification/#parameter-object" style="color:#5A9BF6;">规范文档</a>
-     * <pre style="color:#3982F7;">['field1', 'field2' => [...], ...]</pre>
-     *
-     * @param array|parameter $header <span style="color:#E97230;">header 参数</span>
-     * <a href="https://swagger.io/specification/#parameter-object" style="color:#5A9BF6;">规范文档</a>
-     * <pre style="color:#3982F7;">['field1', 'field2' => [...], ...]</pre>
-     *
-     * @param array|parameter $get <span style="color:#E97230;">get 参数 [parameter]</span>
+     * @param array $get <span style="color:#E97230;">get 参数 [parameter]</span>
      * <a href="https://swagger.io/specification/#parameter-object" style="color:#5A9BF6;">规范文档</a>
      * <pre style="color:#3982F7;">[
      *    'field1',
@@ -70,7 +56,7 @@ class Route
      *    ...
      *]</pre>
      *
-     * @param array|post $post <span style="color:#E97230;">post 参数</span>
+     * @param array $post <span style="color:#E97230;">post 参数</span>
      * <a href="https://swagger.io/specification/#schema-object" style="color:#5A9BF6;">规范文档</a>
      * <pre style="color:#3982F7;">[
      *    'field1',
@@ -82,7 +68,7 @@ class Route
      *    ...
      *]</pre>
      *
-     * @param array|post $file <span style="color:#E97230;">上传文件参数，将会附加到 post 参数列表</span>
+     * @param array $file <span style="color:#E97230;">上传文件参数，将会附加到 post 参数列表</span>
      * <pre style="color:#3982F7;">['field1', 'field2' => [...],]</pre>
      *
      * @param array $json <span style="color:#E97230;">json 参数</span>
@@ -96,6 +82,14 @@ class Route
      *    ],
      *    ...
      *]</pre>
+     *
+     * @param array $cookie <span style="color:#E97230;">cookie 参数列表</span>
+     * <a href="https://swagger.io/specification/#parameter-object" style="color:#5A9BF6;">规范文档</a>
+     * <pre style="color:#3982F7;">['field1', 'field2' => [...], ...]</pre>
+     *
+     * @param array $header <span style="color:#E97230;">header 参数</span>
+     * <a href="https://swagger.io/specification/#parameter-object" style="color:#5A9BF6;">规范文档</a>
+     * <pre style="color:#3982F7;">['field1', 'field2' => [...], ...]</pre>
      *
      * @param array $xml <span style="color:#E97230;">xml 参数，参数列表第一个 item 将作为 root 标签名、</span>
      * <a href="https://swagger.io/specification/#schema-object" style="color:#5A9BF6;">规范文档</a>
@@ -113,7 +107,7 @@ class Route
      *
      * @param bool $requireBody <span style="color:#E97230;">requestBody 数据是否必须</span>
      *
-     * @param array|tag $tags <span style="color:#E97230;">[Operation] 方法所属分组</span>
+     * @param array $tags <span style="color:#E97230;">[Operation] 方法所属分组</span>
      * <div style="color:#E97230;">直接给 string 就可以，如果需要添加描述等信息只需要注解一次就会自动注册到全局。</div>
      * <pre style="color:#3982F7;">[
      *    '标签名称',
@@ -133,16 +127,13 @@ class Route
      * @param string $description <span style="color:#E97230;">[Operation] 方法详细说明</span>
      * <a href="https://swagger.io/specification/#operation-object" style="color:#5A9BF6;">规范文档</a>
      *
-     * @param array|externalDoc $externalDocs <span style="color:#E97230;">[Operation] 方法外部文档</span>
+     * @param array $externalDocs <span style="color:#E97230;">[Operation] 方法外部文档</span>
      *<pre style="color:#3982F7;">[
      *    'description' => '文档描述',
      *    'url'         => '文档链接'
      *]</pre>
      *
-     * @param string|null $operationId <span style="color:#E97230;">[Operation] 方法操作 ID，区分大小写且唯一</span>
-     * <a href="https://swagger.io/specification/#operation-object" style="color:#5A9BF6;">规范文档</a>
-     *
-     * @param array|parameter $parameters <span style="color:#E97230;">[Operation] 接受的参数列表</span>
+     * @param array $parameters <span style="color:#E97230;">[Operation] 接受的参数列表</span>
      * <a href="https://swagger.io/specification/#parameter-object" style="color:#5A9BF6;">规范文档</a>
      * <pre style="color:#3982F7;">[
      *    [
@@ -155,11 +146,11 @@ class Route
      *    ...
      *]</pre>
      *
-     * @param array|requestBody $requestBody <span style="color:#E97230;">[Operation] requestBody
+     * @param array $requestBody $requestBody <span style="color:#E97230;">[Operation] requestBody
      *     参数，上方四个快速设置参数满足不了的需求可以设置原生结构</span>
      * <a href="https://swagger.io/specification/#request-body-object" style="color:#5A9BF6;">标准文档</a>
      *
-     * @param array|response $responses <span style="color:#E97230;">[Operation] 返回数据示例</span>
+     * @param array $responses <span style="color:#E97230;">[Operation] 返回数据示例</span>
      * <a href="https://swagger.io/specification/#responses-object" style="color:#5A9BF6;">规范文档</a>
      * <pre style="color:#3982F7;">[
      *    200 => [
@@ -184,11 +175,11 @@ class Route
      * @param array $security <span style="color:#E97230;">[Operation] 安全声明</span>
      * <a href="https://swagger.io/specification/#security-requirement-object" style="color:#5A9BF6;">规范文档</a>
      *
-     * @param array|server $servers <span style="color:#E97230;">[Operation] 服务器列表</span>
+     * @param array $servers <span style="color:#E97230;">[Operation] 服务器列表</span>
      * <a href="https://swagger.io/specification/#server-object" style="color:#5A9BF6;">规范文档</a>
      * <hr/>
      *
-     * @param array|operation $extend <span style="color:#E97230;">[Operation] 扩展选项</span>
+     * @param array $extend <span style="color:#E97230;">[Operation] 扩展选项</span>
      * <a href="https://swagger.io/specification/#operation-object" style="color:#5A9BF6;">规范文档</a>
      * <div style="color:#E97230;">用于扩展方法的选项、也可以用于强制替换方法选项</div>
      *
@@ -196,29 +187,29 @@ class Route
      * @link https://swagger.io/specification/ OpenAPI 标准
      */
     public function __construct(
-        private string            $route = '',
-        private string|array      $methods = 'get',
-        private array             $middleware = [],
-        private array|parameter   $cookie = [],
-        private array|parameter   $header = [],
-        private array|parameter   $get = [],
-        private post|array        $post = [],
-        private post|array        $file = [],
-        private array             $json = [],
-        private array             $xml = [],
-        private bool              $requireBody = false,
-        private array|tag         $tags = [],
-        private string            $summary = '',
-        private string            $description = '',
-        private externalDoc|array $externalDocs = [],
-        private array|parameter   $parameters = [],
-        private requestBody|array $requestBody = [],
-        private response|array    $responses = [],
-        private array             $callbacks = [],
-        private bool              $deprecated = false,
-        private array             $security = [],
-        private server|array      $servers = [],
-        private operation|array   $extend = [],
+        private string       $route = '',
+        private string|array $methods = 'get',
+        private array        $middleware = [],
+        private array        $get = [],
+        private array        $post = [],
+        private array        $file = [],
+        private array        $json = [],
+        private array        $cookie = [],
+        private array        $header = [],
+        private array        $xml = [],
+        private bool         $requireBody = false,
+        private array        $tags = [],
+        private string       $summary = '',
+        private string       $description = '',
+        private array        $externalDocs = [],
+        private array        $parameters = [],
+        private array        $requestBody = [],
+        private array        $responses = [],
+        private array        $callbacks = [],
+        private bool         $deprecated = false,
+        private array        $security = [],
+        private array        $servers = [],
+        private array        $extend = [],
     )
     {
 
@@ -228,16 +219,9 @@ class Route
         // 路由请求方法
         if (!is_array($this->methods)) $this->methods = [$this->methods];
         $this->methods = array_map('strtoupper', $this->methods);
-        if (in_array('ANY', $this->methods)) $this->methods = [
-            'GET',
-            'HEAD',
-            'POST',
-            'PUT',
-            'DELETE',
-            'CONNECT',
-            'OPTIONS',
-            'TRACE'
-        ];
+        if (in_array('ANY', $this->methods)) {
+            $this->methods = ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'CONNECT', 'OPTIONS', 'TRACE'];
+        }
 
         // 响应值
         $this->responses = array_replace_recursive(
