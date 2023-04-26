@@ -16,9 +16,9 @@
     "issues": "https://qnnp.me/wegar"
   },
   "require": {
-    "php": ">=8.0",
+    "php": ">=8.1",
     "swagger-api/swagger-ui": "^4.0",
-    "webman/admin": "^0.6.3"
+    "illuminate/validation": "^9.52"
   },
   "autoload": {
     "psr-4": {
@@ -26,6 +26,7 @@
     }
   },
   "require-dev": {
+    "webman/admin": "^0.6.3",
     "phpunit/phpunit": "^9.6",
     "phlak/semver": "^4.1"
   }

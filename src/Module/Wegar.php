@@ -47,13 +47,10 @@ class Wegar
         }
 
         foreach ($apps as $app) {
-            if (class_exists($app))
+            if (class_exists($app)) {
                 static::scanAppController($app);
+            }
         }
-    }
-    public static function config($key, $default=null)
-    {
-        return config("plugin.qnnp.wegar.wegar.$key", $default);
     }
 
     private static function scanControllerClasses(string $app_base_namespace, string $app_base_path): array
@@ -181,21 +178,33 @@ class Wegar
 
     private static function checkMenu(): void
     {
+        if (!class_exists('\plugin\admin\api\Menu::class')) return;
         $lock_file = fopen(runtime_path('wegar-menu.lock'), 'a+');
         if (flock($lock_file, LOCK_EX)) {
-            $dev_menu = Menu::get('dev');
-            if (!Menu::get(WegarController::class) && $dev_menu) {
-                $pid = $dev_menu['id'];
-                Menu::add([
-                    'title'  => 'Wegar Doc',
-                    'href'   => '/wegar/swagger',
-                    'pid'    => $pid,
-                    'key'    => WegarController::class,
-                    'weight' => 0,
-                    'type'   => 1,
-                ]);
-                print "✅ 创建 Wegar 管理菜单\n";
+            try {
+                $dev_menu = Menu::get('dev');
+                if (!Menu::get(WegarController::class) && $dev_menu) {
+                    $pid = $dev_menu['id'];
+                    Menu::add([
+                        'title' => 'Wegar Doc',
+                        'href' => '/wegar/swagger',
+                        'pid' => $pid,
+                        'key' => WegarController::class,
+                        'weight' => 0,
+                        'type' => 1,
+                    ]);
+                    print "✅ 创建 Wegar 管理菜单\n";
+                }
+            } catch (\Exception $exception) {
+                print "❌ 创建 Wegar 管理菜单\n";
+                print $exception->getMessage() . PHP_EOL;
+                print $exception->getTraceAsString() . PHP_EOL;
             }
         }
+    }
+
+    public static function config($key, $default = null)
+    {
+        return config("plugin.qnnp.wegar.wegar.$key", $default);
     }
 }
