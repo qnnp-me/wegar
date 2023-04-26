@@ -59,7 +59,11 @@ function set_new_version(
         else
             $version->{"increment$add_version"}();
     }
-    build_add($build, $add_version);
+
+    $build = explode('.', $build);
+    $build[array_search($add_version, ['Major', 'Minor', 'Patch'])] += 1;
+    $build = implode('.', $build);
+
     $version->setBuild((string)$build);
     $version = $version->prefix();
 
@@ -105,11 +109,4 @@ function set_new_version(
     echo shell_exec("git tag -a $version -m '$change_logs'") ?? "Done\n";
     echo shell_exec("git push origin dev --tags ");
     echo shell_exec("git push origin dev:main --tags ");
-}
-
-function build_add(&$build, $add_version): void
-{
-    $build = explode('.', $build);
-    $build[array_search($add_version, ['Major', 'Minor', 'Patch'])] += 1;
-    $build = implode('.', $build);
 }
