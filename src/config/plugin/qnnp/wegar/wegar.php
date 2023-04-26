@@ -5,7 +5,8 @@ use qnnp\wegar\Attribute\Helper\OpenAPI\openapi;
 
 return [
     openapi::info => [
-        info::title => 'Wegar-0.0.2'
+        info::title   => 'Wegar-0.0.2',
+        info::version => '0.0.1'
     ],
     'response'    => [
         'direct'      => false,
