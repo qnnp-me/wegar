@@ -90,10 +90,18 @@ function set_new_version(
     }, $change_logs);
     array_pop($change_logs);
     $change_logs = "$version\n----------\nChange Log  :\n" . implode("\n", array_unique($change_logs));
-    echo "Version change: v$current_version -> $version\n";
+
+    echo str_repeat('=', 64) . "\n";
+    echo "🚨 Version change: v$current_version ➡ $version\n";
+    echo str_repeat('=', 64) . "\n";
     echo "{$change_logs}\n\n";
 
-    echo "确认升级到: $version ？输入 yes 确认: ";
+    echo str_repeat('=', 64) . "\n";
+
+    echo "🚨 请确认已将最新代码推送到了\"dev\"分支！\n\n";
+
+    echo "❓ 确认升级到: $version ？输入 yes 确认: ";
+
     $handle = fopen("php://stdin", "r");
     $line = fgets($handle);
     if (trim($line) != 'yes') {
