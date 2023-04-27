@@ -26,7 +26,6 @@
     }
   },
   "require-dev": {
-    "webman/admin": "^0.6.3",
     "phpunit/phpunit": "^9.6",
     "phlak/semver": "^4.1"
   }
