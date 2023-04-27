@@ -21,6 +21,7 @@ use qnnp\wegar\Attribute\Route as RouteAttribute;
 use qnnp\wegar\Controller\WegarController;
 use ReflectionClass;
 use ReflectionException;
+use Webman\MiddlewareInterface;
 
 
 class Wegar
@@ -147,7 +148,10 @@ class Wegar
 				$middleware_set_list = $endpoint_route->getMiddleware($controller_middleware);
 				$middleware_add_list = [];
 				foreach ($middleware_set_list as $middleware) {
-					if (class_exists($middleware)) {
+					if (
+						$middleware instanceof MiddlewareInterface
+						or (is_string($middleware) and class_exists($middleware))
+					) {
 						$middleware_add_list[] = $middleware;
 					}
 				}
@@ -186,7 +190,7 @@ class Wegar
 
 	private static function checkMenu(): void
 	{
-		if (!class_exists('\plugin\admin\api\Menu::class')) return;
+		if (!class_exists(Menu::class)) return;
 		$lock_file = fopen(runtime_path('wegar-menu.lock'), 'a+');
 		if (flock($lock_file, LOCK_EX)) {
 			try {

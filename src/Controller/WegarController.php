@@ -13,38 +13,38 @@
 
 namespace qnnp\wegar\Controller;
 
-use plugin\admin\app\middleware\AccessControl;
 use qnnp\wegar\Attribute\Middleware;
 use qnnp\wegar\Attribute\RemoveFromDoc;
 use qnnp\wegar\Attribute\Route;
 use qnnp\wegar\Module\OpenAPI;
+use qnnp\wegar\Module\WegarAuthMiddleware;
 use support\Request;
 use support\Response;
 
 #[RemoveFromDoc]
-#[Middleware([AccessControl::class])]
+#[Middleware([WegarAuthMiddleware::class])]
 class WegarController
 {
-    #[Route('{all:(?!openapi\.json).*}',)]
-    public function swagger(
-        Request $request,
-        string  $path = '',
-    ): Response
-    {
-        $path = $path !== 'swagger' ? $path : 'index.html';
-        $custom_file = realpath(dirname(__DIR__) . '/public/swagger/' . $path);
-        $swagger_file = realpath(base_path() . '/vendor/swagger-api/swagger-ui/dist/' . $path);
-        if (is_file($custom_file)) {
-            return response('')->file($custom_file);
-        } elseif (is_file($swagger_file)) {
-            return response('')->file($swagger_file);
-        }
-        return response('<h1>404</h1>')->withStatus(404);
-    }
+	#[Route('{all:(?!openapi\.json).*}', methods: ['get', 'post'])]
+	public function swagger(
+		Request $request,
+		string  $path = '',
+	): Response
+	{
+		$path = $path !== 'swagger' ? $path : 'index.html';
+		$custom_file = realpath(dirname(__DIR__) . '/public/swagger/' . $path);
+		$swagger_file = realpath(base_path() . '/vendor/swagger-api/swagger-ui/dist/' . $path);
+		if (is_file($custom_file)) {
+			return response('')->file($custom_file);
+		} elseif (is_file($swagger_file)) {
+			return response('')->file($swagger_file);
+		}
+		return response('<h1>404</h1>')->withStatus(404);
+	}
 
-    #[Route('openapi.json',)]
-    public function openapi(): Response
-    {
-        return json(OpenAPI::generate(), JSON_PRETTY_PRINT);
-    }
+	#[Route('openapi.json',)]
+	public function openapi(): Response
+	{
+		return json(OpenAPI::generate(), JSON_PRETTY_PRINT);
+	}
 }
