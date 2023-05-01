@@ -13,6 +13,7 @@
 
 namespace qnnp\wegar\Module;
 
+use Exception;
 use plugin\admin\api\Menu;
 use qnnp\wegar\Attribute\BasePath;
 use qnnp\wegar\Attribute\Middleware;
@@ -190,7 +191,6 @@ class Wegar
 
 	private static function checkMenu(): void
 	{
-		if (!class_exists(Menu::class)) return;
 		$lock_file = fopen(runtime_path('wegar-menu.lock'), 'a+');
 		if (flock($lock_file, LOCK_EX)) {
 			try {
@@ -207,7 +207,7 @@ class Wegar
 					]);
 					print "✅ 创建 Wegar 管理菜单\n";
 				}
-			} catch (\Exception $exception) {
+			} catch (Exception $exception) {
 				print "❌ 创建 Wegar 管理菜单\n";
 				print $exception->getMessage() . PHP_EOL;
 				print $exception->getTraceAsString() . PHP_EOL;
