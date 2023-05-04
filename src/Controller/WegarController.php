@@ -34,7 +34,7 @@ class WegarController
 		$path = $path !== 'swagger' ? $path : 'index.html';
 		$custom_file = realpath(dirname(__DIR__) . '/public/swagger/' . $path);
 		$swagger_file = realpath(base_path() . '/vendor/swagger-api/swagger-ui/dist/' . $path);
-		if (is_file($custom_file)) {
+		if (is_file($custom_file) || is_file("phar://webman.phar/" . $custom_file)) {
 			return response('')->file($custom_file);
 		} elseif (is_file($swagger_file)) {
 			return response('')->file($swagger_file);

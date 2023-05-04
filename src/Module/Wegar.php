@@ -13,7 +13,6 @@
 
 namespace qnnp\wegar\Module;
 
-use plugin\admin\api\Menu;
 use qnnp\wegar\Attribute\BasePath;
 use qnnp\wegar\Attribute\Middleware;
 use qnnp\wegar\Attribute\RemoveFromDoc;
@@ -73,11 +72,11 @@ class Wegar
 	private static function scanControllerFiles(string $controller_dir_path): array
 	{
 		$controller_files = [];
-		if (is_dir($controller_dir_path)) {
+		if (is_dir($controller_dir_path) || is_dir("phar://webman.phar/" . $controller_dir_path)) {
 			$dir_items = scandir($controller_dir_path);
 			foreach ($dir_items as $item) {
 				$item_realpath = $controller_dir_path . DIRECTORY_SEPARATOR . $item;
-				if (!preg_match("/^\..*/", $item) && is_dir($item_realpath)) {
+				if (!preg_match("/^\..*/", $item) && (is_dir($item_realpath) || is_dir("phar://webman.phar/" . $item_realpath))) {
 					array_push($controller_files, ...static::scanControllerFiles($item_realpath));
 				} elseif (preg_match("/[\/\\\]controller/i", $item_realpath) && preg_match("/\.php$/i", $item)) {
 					$controller_files[] = $item_realpath;
@@ -190,33 +189,33 @@ class Wegar
 
 	private static function checkMenu(): void
 	{
-		$lock_file = fopen(runtime_path('wegar-menu.lock'), 'a+');
-		if (flock($lock_file, LOCK_EX)) {
-			try {
-				if (!class_exists(Menu::class)) {
-					$host = config('server.listen');
-					print "🚨 未安装 webman/admin 无法创建管理菜单，请自行访问文档: $host/wegar/swagger\n";
-				} else {
-					$dev_menu = Menu::get('dev');
-					if (!Menu::get(WegarController::class) && $dev_menu) {
-						$pid = $dev_menu['id'];
-						Menu::add([
-							'title' => 'Wegar Doc',
-							'href' => '/wegar/swagger',
-							'pid' => $pid,
-							'key' => WegarController::class,
-							'weight' => 0,
-							'type' => 1,
-						]);
-						print "✅ 创建 Wegar 管理菜单\n";
-					}
-				}
-			} catch (\Exception $exception) {
-				print "❌ 创建 Wegar 管理菜单\n";
-				print $exception->getMessage() . PHP_EOL;
-				print $exception->getTraceAsString() . PHP_EOL;
-			}
-		}
+//		$lock_file = fopen(runtime_path('wegar-menu.lock'), 'a+');
+//		if (flock($lock_file, LOCK_EX)) {
+//			try {
+//				if (!class_exists(Menu::class)) {
+//					$host = config('server.listen');
+//					print "🚨 未安装 webman/admin 无法创建管理菜单，请自行访问文档: $host/wegar/swagger\n";
+//				} else {
+//					$dev_menu = Menu::get('dev');
+//					if (!Menu::get(WegarController::class) && $dev_menu) {
+//						$pid = $dev_menu['id'];
+//						Menu::add([
+//							'title' => 'Wegar Doc',
+//							'href' => '/wegar/swagger',
+//							'pid' => $pid,
+//							'key' => WegarController::class,
+//							'weight' => 0,
+//							'type' => 1,
+//						]);
+//						print "✅ 创建 Wegar 管理菜单\n";
+//					}
+//				}
+//			} catch (\Exception $exception) {
+//				print "❌ 创建 Wegar 管理菜单\n";
+//				print $exception->getMessage() . PHP_EOL;
+//				print $exception->getTraceAsString() . PHP_EOL;
+//			}
+//		}
 	}
 
 	public static function config($key, $default = null)
