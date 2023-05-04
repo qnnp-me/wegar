@@ -32,9 +32,11 @@ class WegarController
 	): Response
 	{
 		$path = $path !== 'swagger' ? $path : 'index.html';
-		$custom_file = realpath(dirname(__DIR__) . '/public/swagger/' . $path);
-		$swagger_file = realpath(base_path() . '/vendor/swagger-api/swagger-ui/dist/' . $path);
-		if (is_file($custom_file) || is_file("phar://webman.phar/" . $custom_file)) {
+		$custom_file = dirname(__DIR__) . '/public/swagger/' . $path;
+		$custom_file = realpath($custom_file) ?: $custom_file;
+		$swagger_file = base_path() . '/vendor/swagger-api/swagger-ui/dist/' . $path;
+		$swagger_file = realpath($swagger_file) ?: $swagger_file;
+		if (is_file($custom_file) || is_file("phar://" . $custom_file)) {
 			return response('')->file($custom_file);
 		} elseif (is_file($swagger_file)) {
 			return response('')->file($swagger_file);

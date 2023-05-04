@@ -56,7 +56,7 @@ class Wegar
 	private static function scanControllerClasses(string $app_base_namespace, string $app_base_path): array
 	{
 		$controller_class_list = [];
-		$app_base_path = realpath($app_base_path);
+		$app_base_path = realpath($app_base_path) ?: $app_base_path;
 		$controller_files = static::scanControllerFiles($app_base_path);
 		foreach ($controller_files as $controller_file) {
 			$controller_class = preg_replace("/\.php$/i", '', $controller_file);
@@ -72,11 +72,11 @@ class Wegar
 	private static function scanControllerFiles(string $controller_dir_path): array
 	{
 		$controller_files = [];
-		if (is_dir($controller_dir_path) || is_dir("phar://webman.phar/" . $controller_dir_path)) {
+		if (is_dir($controller_dir_path)) {
 			$dir_items = scandir($controller_dir_path);
 			foreach ($dir_items as $item) {
 				$item_realpath = $controller_dir_path . DIRECTORY_SEPARATOR . $item;
-				if (!preg_match("/^\..*/", $item) && (is_dir($item_realpath) || is_dir("phar://webman.phar/" . $item_realpath))) {
+				if (!preg_match("/^\..*/", $item) && is_dir($item_realpath)) {
 					array_push($controller_files, ...static::scanControllerFiles($item_realpath));
 				} elseif (preg_match("/[\/\\\]controller/i", $item_realpath) && preg_match("/\.php$/i", $item)) {
 					$controller_files[] = $item_realpath;
