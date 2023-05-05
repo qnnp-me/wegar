@@ -20,18 +20,22 @@ class WegarAuthMiddleware implements MiddlewareInterface
 	{
 		if (class_exists(AccessControl::class)) {
 			return (new AccessControl())->process($request, $handler);
-		} elseif(Wegar::config('password')) {
-			$passwd = $request->post('auth', false);
+		} elseif (Wegar::config('password')) {
+			$passwd = $request->post('wegar-auth', false);
 			if ($passwd) {
 				$request->session()->set('wegar-auth', md5($passwd));
+				return \response(<<<EOF
+<script>navigation.back()</script>
+EOF
+				);
 			}
 			if (session('wegar-auth') === md5(Wegar::config('password', ''))) {
 				return $handler($request);
 			} else {
 				return response('')->file(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'public/swagger/auth.html');
 			}
-		}else{
-				return $handler($request);
+		} else {
+			return $handler($request);
 		}
 	}
 }
