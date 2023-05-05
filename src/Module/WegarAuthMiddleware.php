@@ -28,6 +28,8 @@ class WegarAuthMiddleware implements MiddlewareInterface
 			if ($passwd === $conf_passwd) {
 				$request->session()->set('wegar-auth', md5($passwd));
 				return redirect('/wegar/swagger');
+			}else{
+				$request->session()->delete('wegar-auth');
 			}
 			if (session('wegar-auth') === md5($conf_passwd)) {
 				return $handler($request)->withHeaders($headers);
