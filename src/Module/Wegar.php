@@ -189,33 +189,33 @@ class Wegar
 
 	private static function checkMenu(): void
 	{
-//		$lock_file = fopen(runtime_path('wegar-menu.lock'), 'a+');
-//		if (flock($lock_file, LOCK_EX)) {
-//			try {
-//				if (!class_exists(Menu::class)) {
+		$lock_file = fopen(runtime_path('wegar-menu.lock'), 'a+');
+		if (flock($lock_file, LOCK_EX)) {
+			try {
+				if (!class_exists(Menu::class)) {
 //					$host = config('server.listen');
 //					print "🚨 未安装 webman/admin 无法创建管理菜单，请自行访问文档: $host/wegar/swagger\n";
-//				} else {
-//					$dev_menu = Menu::get('dev');
-//					if (!Menu::get(WegarController::class) && $dev_menu) {
-//						$pid = $dev_menu['id'];
-//						Menu::add([
-//							'title' => 'Wegar Doc',
-//							'href' => '/wegar/swagger',
-//							'pid' => $pid,
-//							'key' => WegarController::class,
-//							'weight' => 0,
-//							'type' => 1,
-//						]);
-//						print "✅ 创建 Wegar 管理菜单\n";
-//					}
-//				}
-//			} catch (\Exception $exception) {
-//				print "❌ 创建 Wegar 管理菜单\n";
-//				print $exception->getMessage() . PHP_EOL;
-//				print $exception->getTraceAsString() . PHP_EOL;
-//			}
-//		}
+				} else {
+					$dev_menu = Menu::get('dev');
+					if (!Menu::get(WegarController::class) && $dev_menu) {
+						$pid = $dev_menu['id'];
+						Menu::add([
+							'title' => 'Wegar Doc',
+							'href' => '/wegar/swagger',
+							'pid' => $pid,
+							'key' => WegarController::class,
+							'weight' => 0,
+							'type' => 1,
+						]);
+						print "✅ 创建 Wegar 管理菜单\n";
+					}
+				}
+			} catch (\Exception $exception) {
+				print "❌ 创建 Wegar 管理菜单\n";
+				print $exception->getMessage() . PHP_EOL;
+				print $exception->getTraceAsString() . PHP_EOL;
+			}
+		}
 	}
 
 	public static function config($key, $default = null)
