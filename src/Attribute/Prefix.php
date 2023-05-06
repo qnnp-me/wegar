@@ -5,10 +5,10 @@ namespace qnnp\wegar\Attribute;
 use Attribute;
 
 /**
- * 为控制器下所有相对路径路由指定基础路径
+ * 为控制器下所有路由增加前缀
  */
 #[Attribute(Attribute::TARGET_CLASS)]
-class BasePath
+class Prefix
 {
   public function __construct(public string $path = '')
   {
