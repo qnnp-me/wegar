@@ -13,6 +13,7 @@
 
 namespace qnnp\wegar\Module;
 
+use plugin\admin\api\Menu;
 use qnnp\wegar\Attribute\BasePath;
 use qnnp\wegar\Attribute\Middleware;
 use qnnp\wegar\Attribute\RemoveFromDoc;
