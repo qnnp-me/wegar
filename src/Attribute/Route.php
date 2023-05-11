@@ -469,12 +469,16 @@ class Route
   {
     $raw_tags = [...$tags_1, ...$tags_2];
     $tags = [];
-    foreach ($raw_tags as $raw_tag) {
+    var_dump($raw_tags);
+    foreach ($raw_tags as $raw_key => $raw_tag) {
       $repeat = false;
       if (!is_array($raw_tag)) {
         $raw_tag = ['name' => $raw_tag];
       }
-      foreach ($tags as $key => $tag) {
+      foreach (array_slice($raw_tags, $raw_key) as $key => $tag) {
+        if (!is_array($tag)) {
+          $tag = ['name' => $tag];
+        }
         if ($tag['name'] === $raw_tag['name']) {
           $tags[$key] = [...$tag, ...$raw_tag];
         } else {
