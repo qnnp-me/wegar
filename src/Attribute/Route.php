@@ -108,7 +108,7 @@ class Route
    * @param bool $requireBody <span style="color:#E97230;">requestBody 数据是否必须</span>
    *
    * @param string[]|string $tags <span style="color:#E97230;">[Operation] 方法所属分组</span>
-   * <div style="color:#E97230;">直接给 string 就可以，如果需要添加描述等信息只需要注解一次就会自动注册到全局。</div>
+   * <div style="color:#E97230;">直接给 string 就可以多个可以以英文“ , ”分割，如果需要添加描述等信息只需要注解一次就会自动注册到全局。</div>
    * <pre style="color:#3982F7;">[
    *    '标签名称',
    *    [
