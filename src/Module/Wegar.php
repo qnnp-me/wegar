@@ -160,7 +160,7 @@ class Wegar
             $middleware_add_list[] = $middleware;
           }
         }
-        $path = preg_replace("/\/\.$/", '', $prefix . $base_path . $path);
+        $path = preg_replace("/\/\.\/?$/", '', $prefix . $base_path . $path);
         $path = str_replace('./', '', $path);
 
         $_paths = explode('../', $path);
