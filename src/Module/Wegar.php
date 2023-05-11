@@ -126,32 +126,26 @@ class Wegar
         /** 设置的路由对象的参数列表 */
         $arguments = $endpoint->getArguments();
         // 处理 ./ 相对路径开头
-        $path = preg_replace("/^\.\//", '', $arguments[0] ?? $arguments['route'] ?? '');
-        if ($path === '') {
-          $path = $controller_endpoint->name === 'index' ? '' : $controller_endpoint->name;
-        }
+        $path = $arguments[0] ?? $arguments['route'];
         // 路由对应方法，用于添加路由
         $endpoint_method = $controller_class_ref->name . '@' . $controller_endpoint->name;
-        /** 相对路径子路由处理 */
+        /** 相对路径处理 */
         if (!preg_match("/^[\/\\\]/", $path)) {
           if (!$base_path) {
-            // 驼峰转换
-            $base_path = strtolower(preg_replace("/([a-z0-9])([A-Z])/", "$1-$2", $controller_class_ref->name));
-            $base_namespace = strtolower(preg_replace("/([a-z0-9])([A-Z])/", "$1-$2", $app_base_namespace));
-            // 反斜杠处理
             $base_path = str_replace('\\', '/', $base_path);
-            $base_namespace = str_replace('\\', '/', $base_namespace);
+            $base_namespace = str_replace('\\', '/', $app_base_namespace);
             $base_namespace = preg_replace('/^\//', '', $base_namespace); // 去除用户可能携带的开头斜杠
+
             // 去除基本命名空间开头
             $base_path = str_replace($base_namespace, '', $base_path);
             // 路径中移除 controller 目录
             $base_path = str_replace('/controller/', '/', $base_path);
           }
-          // 拼接实际路径
-          $path = $base_path . (empty($path) ? '' : '/' . $path);
         }
         // 驼峰转换
+        $base_path = strtolower(preg_replace("/([a-z0-9])([A-Z])/", "$1-$2", $base_path));
         $path = strtolower(preg_replace("/([a-z0-9])([A-Z])/", "$1-$2", $path));
+
         // 移除 controller_suffix
         $controller_suffix = strtolower(config('app.controller_suffix', 'controller'));
         $path = preg_replace("/-$controller_suffix/", '', $path);
@@ -166,9 +160,22 @@ class Wegar
             $middleware_add_list[] = $middleware;
           }
         }
+        $path = str_replace('./', '', $prefix . $base_path . $path);
+
+        $_paths = explode('../', $path);
+
+        $path = '';
+
+        foreach ($_paths as $key => $_path) {
+          if ($key > 0) {
+            $path = dirname($path) . '/';
+          }
+          $path .= $_path;
+        }
+
         /** 添加路由 */
         $endpoint_route
-          ->addToRoute($prefix . $path, $endpoint_method)
+          ->addToRoute($path, $endpoint_method)
           ->name($controller_class_ref->getShortName())
           ->middleware($middleware_add_list);
         if (

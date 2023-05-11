@@ -212,10 +212,6 @@ class Route
     private array        $extend = [],
   )
   {
-
-    // 路由路径预处理
-    $this->path = preg_replace("/^\.\//", '', $this->route);
-
     // 路由请求方法
     if (!is_array($this->methods)) $this->methods = [$this->methods];
     $this->methods = array_map('strtoupper', $this->methods);
