@@ -126,7 +126,7 @@ class Wegar
         /** 设置的路由对象的参数列表 */
         $arguments = $endpoint->getArguments();
         // 处理 ./ 相对路径开头
-        $path = $arguments[0] ?? $arguments['route'];
+        $path = $arguments[0] ?? $arguments['route'] ?? $controller_endpoint->name;
         // 路由对应方法，用于添加路由
         $endpoint_method = $controller_class_ref->name . '@' . $controller_endpoint->name;
         /** 相对路径处理 */
@@ -160,7 +160,8 @@ class Wegar
             $middleware_add_list[] = $middleware;
           }
         }
-        $path = str_replace('./', '', $prefix . $base_path . $path);
+        $path = preg_replace("/\/\.$/", '', $prefix . $base_path . $path);
+        $path = str_replace('./', '', $path);
 
         $_paths = explode('../', $path);
 
