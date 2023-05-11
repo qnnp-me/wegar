@@ -161,7 +161,7 @@ class Wegar
           }
         }
         $path = preg_replace("/\/\.\/?$/", '', $prefix . $base_path . $path);
-        $path = str_replace('./', '', $path);
+        $path = str_replace('/./', '/', $path);
 
         $_paths = explode('../', $path);
 
