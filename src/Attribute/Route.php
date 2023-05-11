@@ -107,7 +107,7 @@ class Route
    *
    * @param bool $requireBody <span style="color:#E97230;">requestBody 数据是否必须</span>
    *
-   * @param array $tags <span style="color:#E97230;">[Operation] 方法所属分组</span>
+   * @param string[]|string $tags <span style="color:#E97230;">[Operation] 方法所属分组</span>
    * <div style="color:#E97230;">直接给 string 就可以，如果需要添加描述等信息只需要注解一次就会自动注册到全局。</div>
    * <pre style="color:#3982F7;">[
    *    '标签名称',
@@ -198,7 +198,7 @@ class Route
     private array        $header = [],
     private array        $xml = [],
     private bool         $requireBody = false,
-    private array        $tags = [],
+    private array|string $tags = [],
     private string       $summary = '',
     private string       $description = '',
     private array        $externalDocs = [],
@@ -232,6 +232,10 @@ class Route
       ],
       $this->responses
     );
+
+    if (!is_array($this->tags)) {
+      $this->tags = explode(',', $this->tags);
+    }
   }
 
   public function addToRoute(string $path, mixed $callback): RouteObject

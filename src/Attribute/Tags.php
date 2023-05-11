@@ -8,9 +8,12 @@ use Attribute;
 class Tags
 {
   /**
-   * @param string[] $tags
+   * @param string[]|string $tags
    */
-  public function __construct(public array $tags = [])
+  public function __construct(public array|string $tags = [])
   {
+    if (!is_array($this->tags)) {
+      $this->tags = explode(',', $this->tags);
+    }
   }
 }
