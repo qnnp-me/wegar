@@ -469,7 +469,6 @@ class Route
   {
     $raw_tags = [...$tags_1, ...$tags_2];
     $tags = [];
-    var_dump($raw_tags);
     foreach ($raw_tags as $raw_key => $raw_tag) {
       $repeat = false;
       if (!is_array($raw_tag)) {
