@@ -168,7 +168,7 @@ class Wegar
 
         // 移除 controller_suffix
         $controller_suffix = strtolower(config('app.controller_suffix', 'controller'));
-        $path = preg_replace("/(\-?$controller_suffix|\/controller)\//", '/', $path);
+        $path = preg_replace("/(-?$controller_suffix|\/controller)\//", '/', $path);
         $path = preg_replace("/\/$/", '', $path);
 
         /** 添加路由 */
