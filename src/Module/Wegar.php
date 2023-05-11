@@ -27,7 +27,6 @@ use Webman\MiddlewareInterface;
 
 class Wegar
 {
-
   /**
    * <h2 style="color:#E97230;">扫描注解路由</h2>
    * <span style="color:#E97230;">/app 默认自动加载</span>
@@ -104,7 +103,6 @@ class Wegar
     if (!!($_basepath = $controller_class_ref->getAttributes(BasePath::class))) {
       $base_path = $_basepath[0]->newInstance()->path;
     }
-
     /** Controller 组中间件 */
     $controller_middleware = $controller_class_ref->getAttributes(Middleware::class);
     $controller_middleware = count($controller_middleware) > 0 ? $controller_middleware[0]->newInstance()->middleware : [];
@@ -167,9 +165,12 @@ class Wegar
         }
 
         // 移除 controller_suffix
-        $controller_suffix = strtolower(config('app.controller_suffix', 'controller'));
-        $path = preg_replace("/(-?$controller_suffix|\/controller)\//", '/', $path);
-        $path = preg_replace("/\/$/", '', $path);
+        $controller_suffix = strtolower(preg_replace("/([a-z0-9])([A-Z])/", "$1-$2", config('app.controller_suffix', 'controller')));
+        $path = str_replace("-$controller_suffix/", '/', $path);
+        $path = preg_replace("/-$controller_suffix$/", '/', $path);
+        // 移除 controller 目录
+        $path = str_replace("/controller/", '/', $path);
+        $path = preg_replace("/\\/$/", '', $path);
 
         /** 添加路由 */
         $endpoint_route
@@ -187,9 +188,6 @@ class Wegar
     }
   }
 
-  /**
-   * @throws ReflectionException
-   */
   private static function scanAppController($class_in_root): void
   {
     $class_ref = new ReflectionClass($class_in_root);
