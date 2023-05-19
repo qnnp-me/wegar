@@ -15,6 +15,7 @@ namespace qnnp\wegar\Attribute;
 
 use Attribute;
 use FastRoute\RouteParser\Std;
+use qnnp\wegar\Attribute\Helper\OpenAPI\encoding;
 use qnnp\wegar\Attribute\Helper\OpenAPI\media;
 use qnnp\wegar\Attribute\Helper\OpenAPI\parameter;
 use qnnp\wegar\Attribute\Helper\OpenAPI\requestBody;
@@ -264,7 +265,6 @@ class Route
       $endpoint_source .= $parameter->getType() . ' $' . $parameter->name;
     }
     $endpoint_source .= ' )*';
-
     $this->description .= strlen($this->description) > 0 ? "\n\n---\n\n" : '';
     $this->description .= $endpoint_source;
 
@@ -446,7 +446,7 @@ class Route
           media::schema => [
             schema::properties => $properties,
             schema::type => 'object'
-          ]
+          ],
         ]
       ]
     ];

@@ -17,11 +17,11 @@ window.onload = function () {
       tryItOutEnabled: true,
       // 保存验证信息
       persistAuthorization: true,
-      tagsSorter(a, b) {
-        if (a === 'default') return 1
-        if (b === 'default') return -1
-        return a.localeCompare(b, 'zh-hans')
-      },
+      // tagsSorter(a, b) {
+      //   if (a === 'default') return 1
+      //   if (b === 'default') return -1
+      //   return a.localeCompare(b, 'zh-hans')
+      // },
       requestInterceptor(res) {  // 请求
         return res
       },
@@ -31,7 +31,7 @@ window.onload = function () {
       // 请求代码
       requestSnippetsEnabled: false,
       plugins: [
-        HideCurlPlugin,
+        // HideCurlPlugin,
         HierarchicalTagsPlugin,
       ],
     })
