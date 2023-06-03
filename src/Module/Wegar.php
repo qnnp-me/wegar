@@ -135,7 +135,9 @@ class Wegar
             $base_namespace = preg_replace('/^\//', '', $base_namespace); // 去除用户可能携带的开头斜杠
 
             // 去除基本命名空间开头
-            $base_path = str_replace($base_namespace, '', $base_path);
+            $pattern = str_replace('/', '\/', $base_namespace);
+            $base_path = preg_replace("/^$pattern/", '', $base_path);
+            // 去除基本命名空间开头
           }
         }
         // 驼峰转换
